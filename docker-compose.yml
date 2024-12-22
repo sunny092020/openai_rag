@@ -14,6 +14,15 @@ services:
     volumes:
       - weaviate_data:/var/lib/weaviate
 
+  weaviate-console:
+    image: semitechnologies/weaviate-console:latest
+    ports:
+      - "8081:80"
+    environment:
+      WEAVIATE_URI: 'http://weaviate:8080'
+    depends_on:
+      - weaviate
+
   app:
     build: 
       context: ./app
