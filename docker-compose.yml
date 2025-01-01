@@ -36,6 +36,8 @@ services:
       - OPENAI_COMPLETION_MODEL=gpt-3.5-turbo
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
+    volumes:
+      - ./app:/app
     depends_on:
       - weaviate
     security_opt:
