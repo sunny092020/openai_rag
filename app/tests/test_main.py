@@ -101,3 +101,49 @@ def test_query_with_empty_database():
     result = response.json()
     assert "answer" in result
     assert isinstance(result["similar_documents"], list) 
+
+def test_query_personal_information():
+    # Add documents with personal/biographical information
+    personal_documents = [
+        {
+            "content": "John Smith is a software engineer who graduated from MIT in 2015. He specializes in Python and machine learning.",
+            "metadata": "bio1"
+        },
+        {
+            "content": "John's current project involves developing an AI-powered chatbot for customer service. He has been working on this since 2022.",
+            "metadata": "bio2"
+        }
+    ]
+    
+    # Add the documents to the vector database
+    client.post(
+        "/add-documents",
+        json=[{"content": doc["content"], "metadata": doc["metadata"]} 
+              for doc in personal_documents]
+    )
+    
+    # Test different types of personal queries
+    queries = [
+        {
+            "question": "What is John's educational background?",
+            "expected_content": ["MIT", "2015"]
+        },
+        {
+            "question": "What is John currently working on?",
+            "expected_content": ["chatbot", "customer service"]
+        }
+    ]
+    
+    for query in queries:
+        response = client.post("/query", json={"question": query["question"]})
+        
+        assert response.status_code == 200
+        result = response.json()
+        assert "answer" in result
+        assert "similar_documents" in result
+        assert len(result["similar_documents"]) > 0
+        
+        # Verify that the response contains relevant information
+        answer = result["answer"].lower()
+        assert any(expected.lower() in answer for expected in query["expected_content"]), \
+            f"Expected content not found in answer: {answer}" 
