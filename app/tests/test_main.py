@@ -61,17 +61,28 @@ def test_add_documents_with_invalid_data():
     assert "empty" in response.json()["detail"].lower()
 
 def test_query_flow():
-    # First add some documents
+    # First add some documents with more meaningful content
+    test_documents = [
+        {
+            "content": "The capital city of France is Paris. It is known for the Eiffel Tower.",
+            "metadata": "test1"
+        },
+        {
+            "content": "The capital city of Japan is Tokyo. It is known for its modern technology.",
+            "metadata": "test2"
+        }
+    ]
+    
     client.post(
         "/add-documents",
         json=[{"content": doc["content"], "metadata": doc["metadata"]} 
-              for doc in sample_documents]
+              for doc in test_documents]
     )
     
-    # Then query
+    # Then query with a more specific question
     response = client.post(
         "/query",
-        json={"question": "What is document 1 about?"}
+        json={"question": "What is the capital city of France and what is it known for?"}
     )
     
     assert response.status_code == 200
