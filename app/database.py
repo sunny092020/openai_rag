@@ -14,14 +14,13 @@ class VectorDB:
         schema = {
             "class": "Document",
             "vectorizer": "none",
+            "vectorIndexConfig": {
+                "distance": "cosine"
+            },
             "properties": [
                 {
                     "name": "content",
                     "dataType": ["text"],
-                },
-                {
-                    "name": "embedding",
-                    "dataType": ["number[]"],
                 },
                 {
                     "name": "metadata",
@@ -43,9 +42,9 @@ class VectorDB:
                     data_object={
                         "content": doc["content"],
                         "metadata": doc.get("metadata", ""),
-                        "embedding": embedding
                     },
-                    class_name="Document"
+                    class_name="Document",
+                    vector=embedding
                 )
 
     def search_similar(self, query_embedding: List[float], limit: int = 3):
@@ -53,11 +52,18 @@ class VectorDB:
         result = (
             self.client.query
             .get("Document", ["content", "metadata"])
+            .with_additional(["vector"])
             .with_near_vector({
                 "vector": query_embedding,
+                "certainty": 0.7
             })
             .with_limit(limit)
             .do()
         )
+        
+        print("Search result:", result)
+        
+        if "data" not in result or "Get" not in result["data"] or "Document" not in result["data"]["Get"]:
+            return []
         
         return result["data"]["Get"]["Document"] 

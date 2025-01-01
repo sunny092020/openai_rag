@@ -60,23 +60,46 @@ def test_add_documents(vector_db):
 
 def test_search_similar(vector_db):
     """Test searching for similar documents"""
+    # Use smaller embeddings for testing
+    dim = 4  # Using smaller dimension for testing
+    
     # Add test documents
     documents = [
         {"content": "The cat sat on the mat", "metadata": "doc1"},
         {"content": "The dog played in the yard", "metadata": "doc2"}
     ]
+    
     embeddings = [
-        [1.0, 0.0, 0.0],  # First document embedding
-        [0.0, 1.0, 0.0]   # Second document embedding
+        [1.0, 0.0, 0.0, 0.0],  # First document embedding
+        [0.0, 1.0, 0.0, 0.0]   # Second document embedding
     ]
     
+    # Add documents and verify addition
     vector_db.add_documents(documents, embeddings)
     
+    # Verify documents were added
+    result = (
+        vector_db.client.query
+        .get("Document", ["content", "metadata"])
+        .with_additional(["vector"])  # Add this to see the vectors
+        .do()
+    )
+    
+    print("Documents in DB:", result)  # Debug print
+    assert len(result["data"]["Get"]["Document"]) == 2, "Documents were not added properly"
+    
     # Search using first document's embedding
-    query_embedding = [1.0, 0.0, 0.0]
+    query_embedding = [1.0, 0.0, 0.0, 0.0]  # Should match the first document
+    
+    # Debug print before search
+    print("Searching with embedding:", query_embedding)
+    
     results = vector_db.search_similar(query_embedding, limit=1)
     
-    assert len(results) == 1
+    # Debug print after search
+    print("Search results:", results)
+    
+    assert len(results) == 1, "Search should return exactly one result"
     assert results[0]["content"] == "The cat sat on the mat"
     assert results[0]["metadata"] == "doc1"
 
@@ -88,15 +111,15 @@ def test_search_similar_with_limit(vector_db):
         {"content": "Doc 3", "metadata": "3"}
     ]
     embeddings = [
-        [1.0, 0.0, 0.0],
-        [0.9, 0.1, 0.0],
-        [0.8, 0.2, 0.0]
+        [1.0, 0.0, 0.0, 0.0],
+        [0.9, 0.1, 0.0, 0.0],
+        [0.8, 0.2, 0.0, 0.0]
     ]
     
     vector_db.add_documents(documents, embeddings)
     
     # Search with limit=2
-    results = vector_db.search_similar([1.0, 0.0, 0.0], limit=2)
+    results = vector_db.search_similar([1.0, 0.0, 0.0, 0.0], limit=2)
     assert len(results) == 2
 
 def test_add_documents_with_missing_metadata(vector_db):
