@@ -28,13 +28,20 @@ services:
       context: ./app
     ports:
       - "8000:8000"
+      - "5678:5678"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - WEAVIATE_URL=http://weaviate:8080
       - OPENAI_EMBEDDING_MODEL=text-embedding-ada-002
       - OPENAI_COMPLETION_MODEL=gpt-3.5-turbo
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
     depends_on:
       - weaviate
+    security_opt:
+      - seccomp:unconfined
+    cap_add:
+      - SYS_PTRACE
 
 volumes:
   weaviate_data: 
