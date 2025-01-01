@@ -57,7 +57,8 @@ def test_add_documents_with_invalid_data():
         json=[{"content": "", "metadata": "test"}]  # Empty content should fail
     )
     
-    assert response.status_code == 500
+    assert response.status_code == 400
+    assert "empty" in response.json()["detail"].lower()
 
 def test_query_flow():
     # First add some documents

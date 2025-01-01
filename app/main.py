@@ -19,6 +19,10 @@ class Query(BaseModel):
 @app.post("/add-documents")
 async def add_documents(documents: List[Document]):
     try:
+        # Validate that no documents have empty content
+        if any(not doc.content.strip() for doc in documents):
+            raise ValueError("Document content cannot be empty")
+            
         # Convert documents to the format expected by VectorDB
         docs = [{"content": doc.content, "metadata": doc.metadata} for doc in documents]
         
@@ -29,6 +33,8 @@ async def add_documents(documents: List[Document]):
         vector_db.add_documents(docs, embeddings)
         
         return {"message": f"Successfully added {len(documents)} documents"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
